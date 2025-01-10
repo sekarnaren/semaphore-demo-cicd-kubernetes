@@ -47,3 +47,5 @@ blocks:
             - 'docker pull $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID'
             - 'docker tag $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/demo:latest'
             - 'docker push $DOCKER_USERNAME/demo:latest'
+      secrets:
+        - name: dockerhub
