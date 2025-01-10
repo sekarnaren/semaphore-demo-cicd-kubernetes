@@ -17,3 +17,33 @@ blocks:
             - 'docker push $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID'
       secrets:
         - name: dockerhub
+  - name: Tests
+    task:
+      secrets:
+        - name: dockerhub
+      prologue:
+        commands:
+          - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+          - 'docker pull $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID'
+      jobs:
+        - name: Unit Test
+          commands:
+            - 'docker run -it $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID npm run lint'
+        - name: Functional Test
+          commands:
+            - sem-service start postgres
+            - 'docker run --net=host -it $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID npm run ping'
+            - 'docker run --net=host -it $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID npm run migrate'
+        - name: Integration Test
+          commands:
+            - sem-service start postgres
+            - 'docker run --net=host -it $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID npm run test'
+  - name: Push
+    task:
+      jobs:
+        - name: Push
+          commands:
+            - echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin
+            - 'docker pull $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID'
+            - 'docker tag $DOCKER_USERNAME/demo:$SEMAPHORE_WORKFLOW_ID $DOCKER_USERNAME/demo:latest'
+            - 'docker push $DOCKER_USERNAME/demo:latest'
